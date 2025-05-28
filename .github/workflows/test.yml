@@ -17,5 +17,12 @@ jobs:
             - name: Playground
               id: playground
               run: |
-                  echo "TEST: ${{ github.event.inputs['target-environment'] }}"
+                  echo "TEST-environment: ${{ github.event.inputs['target-environment'] }}"
+                  echo "TEST-SECRET_A: ${{ secrets.SECRET_A }}"
+                  echo "TEST-SECRET_B: ${{ secrets.SECRET_B }}"
+                  echo "TEST-ENV_A: ${{ vars.VARIABLE_A }}"
+                  echo "TEST-ENV_B: ${{ vars.VARIABLE_B }}"
+                  echo "------------------------------------------"
+                  echo "TEST-secrets: ${{ secrets }}"
+                  echo "TEST-vars: ${{ vars }}"
 
