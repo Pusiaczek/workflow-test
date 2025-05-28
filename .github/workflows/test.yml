@@ -1,42 +1,39 @@
 name: test-workflow
 on:
-    workflow_dispatch:
-        inputs:
-            target-environment:
-                description: 'Environment to deploy to'
-                type: environment
-                required: true
+  workflow_dispatch:
+    inputs:
+      target-environment:
+        description: "Environment to deploy to"
+        type: environment
+        required: true
 
 jobs:
-    playground:
-        runs-on: ubuntu-latest
-        env:
-            NODE_VERSION: '20'
-            VARS_LIST: "VARIABLE_A VARIABLE_B"
-            LOL: ${{ vars }}
-        environment: ${{ github.event.inputs['target-environment'] }}
-        steps:
-            - name: Playground
-              id: playground
-              run: |
-                  # echo "TEST-environment: ${{ github.event.inputs['target-environment'] }}"
-                  # echo "TEST-SECRET_A: ${{ secrets.SECRET_A }}"
-                  # echo "TEST-SECRET_B: ${{ secrets.SECRET_B }}"
-                  # echo "TEST-ENV_A: ${{ vars.VARIABLE_A }}"
-                  # echo "TEST-ENV_B: ${{ vars.VARIABLE_B }}"
-                  # echo "------------------------------------------"
-                  # echo "TEST-secrets: ${{ secrets }}"
-                  # echo "TEST-vars: ${{ vars }}"
-                  echo "LOL='$LOL'"
+  playground:
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: "20"
 
-            
-            - name: Pajacera
-              id: Pajacera
-              run: |
-                > .env
-                for var in $VARS_LIST; do
-                  val=$(eval echo \$$var)
-                  echo "$var=$val" >> .env
-                done
-                cat .env
+    environment: ${{ github.event.inputs['target-environment'] }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Playground
+        id: playground
+        env:
+          VARIABLE_A: ${{ vars.VARIABLE_A }}
+          VARIABLE_B: ${{ vars.VARIABLE_B }}
+          SECRET_A: ${{ secrets.SECRET_A }}
+          SECRET_B: ${{ secrets.SECRET_B }}
+
+        run: |
+          # echo "TEST-environment: ${{ github.event.inputs['target-environment'] }}"
+          # echo "TEST-SECRET_A: ${{ secrets.SECRET_A }}"
+          # echo "TEST-SECRET_B: ${{ secrets.SECRET_B }}"
+          # echo "TEST-ENV_A: ${{ vars.VARIABLE_A }}"
+          # echo "TEST-ENV_B: ${{ vars.VARIABLE_B }}"
+          # echo "------------------------------------------"
+          # echo "TEST-secrets: ${{ secrets }}"
+          # echo "TEST-vars: ${{ vars }}"
+          envsubst < .env.template > .env
+          cat .env
 
