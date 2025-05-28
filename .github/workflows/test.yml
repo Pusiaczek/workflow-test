@@ -1,0 +1,21 @@
+name: test-workflow
+on:
+    workflow_dispatch:
+        inputs:
+            target-environment:
+                description: 'Environment to deploy to'
+                type: environment
+                required: true
+
+jobs:
+    playground:
+        runs-on: ubuntu-latest
+        env:
+            NODE_VERSION: '20'
+        environment: ${{ github.event.inputs['target-environment'] }}
+        steps:
+            - name: Playground
+              id: playground
+              run: |
+                  echo "TEST: ${{ github.event.inputs['target-environment'] }}"
+
