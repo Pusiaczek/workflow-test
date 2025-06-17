@@ -21,10 +21,8 @@ jobs:
         id: playground
         env:
           ALL_VARS: ${{ toJSON(vars) }}
-          TEST_VARS: ${{ vars }}
         run: |
           echo "ALL_VARS: $ALL_VARS"
-          echo "TEST_VARS: $TEST_VARS"
           # envsubst < .env.template > .env
           # cat .env
 
