@@ -1,0 +1,73 @@
+name: "Generate .env file"
+description: "Generate .env file from template using environment variables and dynamic variables"
+inputs:
+  env_vars:
+    description: "JSON string of environment variables"
+    required: true
+  dynamic_vars:
+    description: "JSON string of dynamic variables"
+    required: true
+  template:
+    description: "Path to template file"
+    default: ".env.template"
+    required: false
+  output:
+    description: "Path to output file"
+    default: ".env"
+    required: false
+  working_dir:
+    description: "Working directory (relative to repository root)"
+    default: "."
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        
+        # Set up variables from inputs
+        ENV_VARS_JSON='${{ inputs.env_vars }}'
+        DYNAMIC_VARS_JSON='${{ inputs.dynamic_vars }}'
+        TEMPLATE="${{ inputs.template }}"
+        OUTPUT="${{ inputs.output }}"
+        WORKING_DIR="${{ inputs.working_dir }}"
+        
+        # Change to working directory if specified
+        if [[ "$WORKING_DIR" != "." ]]; then
+          cd "$WORKING_DIR"
+        fi
+        
+        # Create temp dir
+        TEMP_DIR=$(mktemp -d)
+        trap 'rm -rf "$TEMP_DIR"' EXIT
+        
+        # Write JSON inputs to files
+        echo "$ENV_VARS_JSON" > "$TEMP_DIR/f1.json"
+        echo "$DYNAMIC_VARS_JSON" > "$TEMP_DIR/f2.json"
+        
+        # Merge JSONs and output key=value format
+        yq -r eval-all '. as $item ireduce ({}; . * $item) | to_entries[] | "\(.key)=\(.value)"' \
+          "$TEMP_DIR/f1.json" "$TEMP_DIR/f2.json" > "$TEMP_DIR/merged_envs"
+        
+        # Export all variables to environment
+        set -a # Turn on auto-export
+        source "$TEMP_DIR/merged_envs"
+        set +a  # Turn off auto-export
+        
+        # Check for missing variables in template
+        MISSING_VARS=$(grep -v '^#' "$TEMPLATE" | grep -o '\${[A-Za-z_][A-Za-z0-9_]*}' | tr -d '${}' | while read -r var; do
+          if [ -z "${!var:-}" ]; then
+            echo "$var"
+          fi  
+        done)
+        
+        if [ -n "$MISSING_VARS" ]; then
+          echo "❌ Missing environment variables:"
+          echo "$MISSING_VARS"
+          exit 1
+        fi
+        
+        # Generate output file
+        envsubst < "$TEMPLATE" > "$OUTPUT"
+        echo "✅ Successfully generated $OUTPUT"
