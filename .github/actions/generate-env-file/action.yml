@@ -4,9 +4,6 @@ inputs:
   env_vars:
     description: "JSON string of environment variables"
     required: true
-  # dynamic_vars:
-  #   description: "JSON string of dynamic variables"
-  #   required: true
   template:
     description: "Path to template file"
     default: ".env.template"
@@ -28,7 +25,6 @@ runs:
         
         # Set up variables from inputs
         ENV_VARS_JSON='${{ inputs.env_vars }}'
-        # DYNAMIC_VARS_JSON='${{ inputs.dynamic_vars }}'
         TEMPLATE="${{ inputs.template }}"
         OUTPUT="${{ inputs.output }}"
         WORKING_DIR="${{ inputs.working_dir }}"
@@ -43,12 +39,11 @@ runs:
         trap 'rm -rf "$TEMP_DIR"' EXIT
         
         # Write JSON inputs to files
-        echo "$ENV_VARS_JSON" > "$TEMP_DIR/f1.json"
-        # echo "$DYNAMIC_VARS_JSON" > "$TEMP_DIR/f2.json"
+        echo "$ENV_VARS_JSON" > "$TEMP_DIR/env_vars.json"
         
-        # Merge JSONs and output key=value format
-        yq -r eval-all '. as $item ireduce ({}; . * $item) | to_entries[] | "\(.key)=\(.value)"' \
-          "$TEMP_DIR/f1.json" > "$TEMP_DIR/merged_envs"
+        # Format JSON as key=value pairs and write to file
+        yq -r '. | to_entries[] | "\(.key)=\(.value)"' \
+          "$TEMP_DIR/env_vars.json" > "$TEMP_DIR/merged_envs"
         
         # Export all variables to environment
         set -a # Turn on auto-export
