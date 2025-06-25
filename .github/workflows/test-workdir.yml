@@ -31,4 +31,4 @@ jobs:
       - name: Debug
         id: debug
         run: |
-          cat .env
+          cat ./a/b/c/.env
