@@ -17,12 +17,32 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Playground
-        id: playground
-        env:
-          ALL_VARS: ${{ toJSON(vars) }}
+      - name: Setup dynamic variables
+        id: dynamic-vars
         run: |
-          echo "ALL_VARS: $ALL_VARS"
-          # envsubst < .env.template > .env
-          # cat .env
+          # Create JSON using heredoc with dynamic values
+          json=$(cat <<EOF
+          {
+            "BUILD_VERSION": "${{ github.sha }}",
+            "APP_ENV": "${{ inputs.environment || github.ref_name == 'main' && 'production' || 'staging' }}"
+          }
+          EOF
+          )
+          
+          # Store in outputs using multiline syntax
+          echo "json<<EOF" >> $GITHUB_OUTPUT
+          echo "$json" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Generate .env file
+        uses: ./.github/actions/create-env-file
+        with:
+          env_vars: ${{ toJSON(vars) }}
+          dynamic_vars: ${{ steps.dynamic-vars.outputs.json }}
+          template: ".env.template"
+          output: ".env"
 
+      - name: Debug
+        id: debug
+        run: |
+          cat .env
