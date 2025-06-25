@@ -24,7 +24,7 @@ jobs:
           APP_ENV: ${{ github.event.inputs['target-environment'] }}
         with:
           env_vars: ${{ toJSON(vars) }}
-          dynamic_vars: ${{ toJSON(env) }}
+          # dynamic_vars: ${{ toJSON(env) }}
           template: ".env.template"
           output: ".env"
 
