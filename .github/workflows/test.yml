@@ -21,7 +21,7 @@ jobs:
         uses: ./.github/actions/generate-env-file
         env:
           BUILD_VERSION: ${{ github.sha }}
-          APP_ENV: ${{ inputs.environment }}
+          APP_ENV: ${{ github.event.inputs['target-environment'] }}
         with:
           env_vars: ${{ toJSON(vars) }}
           dynamic_vars: ${{ toJSON(env) }}
